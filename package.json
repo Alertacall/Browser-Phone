@@ -1,0 +1,15 @@
+{
+  "name": "browser-phone",
+  "version": "0.3.34",
+  "description": "A fully featured browser based WebRTC Softphone",
+  "private": true,
+  "scripts": {
+    "build": "npm run build:js && npm run build:css",
+    "build:js": "terser Phone/phone.js -o Phone/phone.min.js --compress --mangle",
+    "build:css": "cleancss Phone/phone.css -o Phone/phone.min.css"
+  },
+  "devDependencies": {
+    "clean-css-cli": "^5.6.3",
+    "terser": "^5.39.0"
+  }
+}

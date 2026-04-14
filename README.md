@@ -1,5 +1,5 @@
 # Siperb - Browser Phone
-A fully featured browser based WebRTC Softphone phone for Asterisk or FreeSWITCH PBX 
+A fully featured browser based WebRTC Softphone phone for Asterisk or FreeSWITCH PBX
 
 ### About Siperb
 Siperb provides both the [Softphone](https://www.siperb.com/kb/article/softphone/) and the [SIP to WebRTC Proxy](https://www.siperb.com/kb/article/webrtc-to-sip-proxy/) that sits in the cloud between your existing PBX and your users.
@@ -12,7 +12,7 @@ Utilize your existing PBX to seamlessly integrate with the advanced [WebRTC](htt
 ## Features v0.3.x
 - SIP Audio Calling
 - SIP Video Calling
-- XMPP Messaging 
+- XMPP Messaging
 - Call Transfer (Both Blind & Attended)
 - 3rd Party Conference Call
 - Call Detail Records
@@ -52,6 +52,26 @@ Utilize your existing PBX to seamlessly integrate with the advanced [WebRTC](htt
 - croppie-2.6.4                 : For Croppie
 
 > Note: These files will load automatically from CDN.
+
+## Building
+
+The minified files (`phone.min.js`, `phone.min.css`) are generated from `phone.js` and `phone.css` using [terser](https://github.com/terser/terser) and [clean-css](https://github.com/clean-css/clean-css-cli).
+
+Install dependencies (requires Node.js):
+```
+npm install
+```
+
+Build both files:
+```
+npm run build
+```
+
+Or build individually:
+```
+npm run build:js   # phone.js → phone.min.js
+npm run build:css  # phone.css → phone.min.css
+```
 
 ## Testing
 ```
