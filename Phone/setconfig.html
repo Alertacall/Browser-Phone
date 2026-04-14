@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Set Config</title>
+    </head>
+    <body>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        console.log(URLSearchParams);
+        console.log(Object.fromEntries(params));
+
+        /**
+         * account parameters we'll take from URL query:
+         * server          wssServer
+         * port            WebSocketPort
+         * path            ServerPath
+         * display_name    profileName
+         * domain          SipDomain
+         * sip_username    SipUsername
+         * sip_password    SipPassword
+         *
+         * These we'll set defaults for:
+         * voicemail       VoicemailSubscribe    0
+         * chat_engine     ChatEngine            SIMPLE
+         * other parameters we want to set defaults for:
+         * UIThemeStyle=dark
+         */
+        const localDB = window.localStorage;
+
+        // Map URL parameters to localStorage keys
+        const configMap = {
+            server: "wssServer",
+            port: "WebSocketPort",
+            path: "ServerPath",
+            display_name: "profileName",
+            domain: "SipDomain",
+            sip_username: "SipUsername",
+            sip_password: "SipPassword"
+        };
+
+        const missing = new Set();
+
+        // Set values from URL parameters
+        for (const [param, key] of Object.entries(configMap)) {
+            const value = params.get(param);
+            if (value) {
+                localDB.setItem(key, value);
+            } else {
+                missing.add(param);
+            }
+        }
+
+        // Set defaults for parameters not in URL
+        localDB.setItem("VoicemailSubscribe", localDB.getItem("VoicemailSubscribe") || "0");
+        localDB.setItem("ChatEngine", localDB.getItem("ChatEngine") || "SIMPLE");
+        localDB.setItem("UIThemeStyle", localDB.getItem("UIThemeStyle") || "dark");
+
+        if ( missing.size > 0 ) {
+            console.warn("Missing parameters:", Array.from(missing).join(", "));
+        const warningDiv = document.createElement("div");
+        warningDiv.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            z-index: 9999;
+        `;
+
+        const mainText = document.createElement("h1");
+        mainText.style.cssText = `
+            font-size: 2.5rem;
+            color: #333;
+            text-align: center;
+            margin: 0 20px 30px;
+            max-width: 600px;
+        `;
+        mainText.textContent = "Sorry, we're unable to automatically load the Browser Phone app. Please contact support";
+
+        const smallText = document.createElement("p");
+        smallText.style.cssText = `
+            font-size: 0.95rem;
+            color: #666;
+            text-align: center;
+            max-width: 500px;
+            margin: 0 20px;
+        `;
+        smallText.textContent = "Missing parameters: " + Array.from(missing).join(", ");
+
+        warningDiv.appendChild(mainText);
+        warningDiv.appendChild(smallText);
+        document.body.appendChild(warningDiv);
+        } else {
+            window.location.replace("index.html");
+        }
+
+/***
+ *
+        localDB.setItem("wssServer", $("#Configure_Account_wssServer").val());
+        localDB.setItem("WebSocketPort", $("#Configure_Account_WebSocketPort").val());
+        localDB.setItem("ServerPath", $("#Configure_Account_ServerPath").val());
+        localDB.setItem("profileName", $("#Configure_Account_profileName").val());
+        localDB.setItem("SipDomain", $("#Configure_Account_SipDomain").val());
+        localDB.setItem("SipUsername", $("#Configure_Account_SipUsername").val());
+        localDB.setItem("SipPassword", $("#Configure_Account_SipPassword").val());
+        localDB.setItem("VoiceMailSubscribe", ($("#Configure_Account_Voicemail_Subscribe").is(':checked'))? "1" : "0");
+        localDB.setItem("VoicemailDid", $("#Configure_Account_Voicemail_Did").val());
+
+        localDB.setItem("ChatEngine", chatEng);
+    */
+
+    </script>
+    </body>
+</html>

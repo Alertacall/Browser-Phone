@@ -53,6 +53,35 @@ Utilize your existing PBX to seamlessly integrate with the advanced [WebRTC](htt
 
 > Note: These files will load automatically from CDN.
 
+## Remote Configuration (`setconfig.html`)
+
+`setconfig.html` allows the phone to be pre-configured via URL query parameters — useful for provisioning links, QR codes, or single-sign-on redirects. When opened, it writes the supplied values into `localStorage` and immediately redirects to `index.html`.
+
+**Usage:**
+```
+setconfig.html?server=sip.example.com&port=8089&path=/ws&domain=example.com&display_name=Alice&sip_username=alice&sip_password=secret
+```
+
+**Supported parameters:**
+
+| Parameter      | localStorage key     | Description                        |
+|----------------|----------------------|------------------------------------|
+| `server`       | `wssServer`          | WebSocket server hostname          |
+| `port`         | `WebSocketPort`      | WebSocket server port              |
+| `path`         | `ServerPath`         | WebSocket server path              |
+| `display_name` | `profileName`        | User's display name                |
+| `domain`       | `SipDomain`          | SIP domain                         |
+| `sip_username` | `SipUsername`        | SIP username                       |
+| `sip_password` | `SipPassword`        | SIP password                       |
+
+All seven parameters are required. If any are missing, an error page is shown instead of redirecting. The following settings are also written with defaults if not already present in `localStorage`:
+
+| localStorage key     | Default  |
+|----------------------|----------|
+| `VoicemailSubscribe` | `0`      |
+| `ChatEngine`         | `SIMPLE` |
+| `UIThemeStyle`       | `dark`   |
+
 ## Building
 
 The minified files (`phone.min.js`, `phone.min.css`) are generated from `phone.js` and `phone.css` using [terser](https://github.com/terser/terser) and [clean-css](https://github.com/clean-css/clean-css-cli).
