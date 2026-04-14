@@ -1933,7 +1933,15 @@ function CreateUserAgent() {
             },
             onMessage: function (sip){
                 ReceiveOutOfDialogMessage(sip);
-            }
+            },
+            onNotify: function(sip) {
+                // required to handle out-of-dialog NOTIFY messages from the
+                // SIP server; used to implement remote control of answer
+                // and hold
+                console.info("Received out-of-dialog NOTIFY", sip)
+                handleColdNotify(sip);
+            },
+            allowLegacyNotification: true  // required to enable out-of-dialog NOTIFY events
         }
     }
     if(IceStunServerJson != ""){
@@ -9007,6 +9015,19 @@ function FindLineByNumber(lineNum) {
     }
     return null;
 }
+function FindLineByCallerID(callerID) {
+    //attempt to match an incoming caller ID to a Line
+    for (let l = 0; l < Lines.length; l++) {
+        if (Lines[l].DisplayNumber === callerID) return Lines[l];
+    }
+    return null;
+}
+function _testDumpLines() {
+    console.log(`Current phone lines: (there are ${Lines.length} existing lines)`);
+    for (let l = 0; l < Lines.length; l++) {
+        console.dir(Lines[l])
+    }
+}
 function AddLineHtml(lineObj, direction){
     var avatar = getPicture(lineObj.BuddyObj.identity);
 
@@ -15370,4 +15391,48 @@ var reconnectXmpp = function(){
     console.log("XMPP connect...");
 
     XMPP.connect(xmpp_username, xmpp_password, onStatusChange);
+}
+
+
+function handleColdNotify(notification) {
+    console.dir(notification);
+
+    const headers = notification.incomingNotifyRequest.message.headers;
+    const event = headers.Event[0].raw
+
+    _testDumpLines()
+
+    if ( event === "talk" ) {
+        // find the caller's phone number from the supplied header
+        const number = headers.Caller[0].raw;
+        console.log(`NOTIFY event=talk with number=${number}`);
+
+        let line = FindLineByCallerID(number);
+        if ( line === null ) {
+            console.warn(`Unable to find line matching caller ${number}`);
+            // TODO: do we default to using Line[0] here?
+            return;
+        }
+
+        console.log(`Found line ${line.LineNumber} for caller ID ${number}`);
+
+        AnswerAudioCall(line.LineNumber);
+    } else if ( event === "hold") {
+        const hold = headers.Hold[0].raw.toLowerCase() === 'true';
+
+        for ( let line of Lines ) {
+            if ( hold && !line.SipSession.isOnHold ) {
+                console.log(`Line ${line.LineNumber} isn't on hold; let's make it`)
+                holdSession(line.LineNumber);
+            } else if ( !hold && line.SipSession.isOnHold ) {
+                console.log(`Line ${line.LineNumer} is on hold; let's resume`);
+                unholdSession(line.LineNumber);
+
+                // we'll only resume a single call at once; so let's break
+                break;
+            }
+        }
+    } else {
+        console.warn(`Unrecognized out-of-dialog NOTIFY event ${event}`);
+    }
 }
