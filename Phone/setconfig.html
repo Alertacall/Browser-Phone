@@ -25,8 +25,6 @@
          * These we'll set defaults for:
          * voicemail       VoicemailSubscribe    0
          * chat_engine     ChatEngine            SIMPLE
-         * other parameters we want to set defaults for:
-         * UIThemeStyle=dark
          */
         const localDB = window.localStorage;
 
@@ -56,7 +54,7 @@
         // Set defaults for parameters not in URL
         localDB.setItem("VoicemailSubscribe", localDB.getItem("VoicemailSubscribe") || "0");
         localDB.setItem("ChatEngine", localDB.getItem("ChatEngine") || "SIMPLE");
-        localDB.setItem("UIThemeStyle", localDB.getItem("UIThemeStyle") || "dark");
+        localDB.setItem("UiThemeStyle", localDB.getItem("UiThemeStyle") || "dark");
 
         if ( missing.size > 0 ) {
             console.warn("Missing parameters:", Array.from(missing).join(", "));
@@ -102,22 +100,6 @@
         } else {
             window.location.replace("index.html");
         }
-
-/***
- *
-        localDB.setItem("wssServer", $("#Configure_Account_wssServer").val());
-        localDB.setItem("WebSocketPort", $("#Configure_Account_WebSocketPort").val());
-        localDB.setItem("ServerPath", $("#Configure_Account_ServerPath").val());
-        localDB.setItem("profileName", $("#Configure_Account_profileName").val());
-        localDB.setItem("SipDomain", $("#Configure_Account_SipDomain").val());
-        localDB.setItem("SipUsername", $("#Configure_Account_SipUsername").val());
-        localDB.setItem("SipPassword", $("#Configure_Account_SipPassword").val());
-        localDB.setItem("VoiceMailSubscribe", ($("#Configure_Account_Voicemail_Subscribe").is(':checked'))? "1" : "0");
-        localDB.setItem("VoicemailDid", $("#Configure_Account_Voicemail_Did").val());
-
-        localDB.setItem("ChatEngine", chatEng);
-    */
-
     </script>
     </body>
 </html>
