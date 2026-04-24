@@ -51,10 +51,30 @@
             }
         }
 
-        // Set defaults for parameters not in URL
-        localDB.setItem("VoicemailSubscribe", localDB.getItem("VoicemailSubscribe") || "0");
-        localDB.setItem("ChatEngine", localDB.getItem("ChatEngine") || "SIMPLE");
-        localDB.setItem("UiThemeStyle", localDB.getItem("UiThemeStyle") || "dark");
+        // Set defaults for parameters not in URL:
+        const defaults = {
+            profileUserID: Date.now()+Math.floor(Math.random()*10000).toString(16).toUpperCase(),
+            ChatEngine: "SIMPLE",
+            UiThemeStyle: "dark",
+            AspectRatio: 1.33,
+            AudioOutputId: 'default',
+            AutoGainControl: '1',
+            EchoCancellation: '1',
+            NoiseSuppression: '1',
+            Notifications: '0',
+            RingOutputId: 'default',
+            VideoHeight: '',
+            VideoOrientation: 'rotateY(180deg)',
+            VideoSrcId: 'default',
+            VoiceMailSubscribe: '0',
+            VoicemailDid: ''
+        };
+        for (const [key, defaultValue] of Object.entries(defaults)) {
+            if (!localDB.getItem(key)) {
+                localDB.setItem(key, defaultValue);
+            }
+        }
+
 
         if ( missing.size > 0 ) {
             console.warn("Missing parameters:", Array.from(missing).join(", "));
