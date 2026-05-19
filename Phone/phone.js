@@ -2565,7 +2565,7 @@ function ReceiveCall(session) {
     }
 
     if(AutoAnswerEnabled || AutoAnswerPolicy == "enabled" || autoAnswerRequested){
-        if(CurrentCalls == 0){ // There are no other calls, so you can answer
+        if(CurrentCalls == 0 || autoAnswerRequested ){ // There are no other calls, so you can answer
             console.log("Going to Auto Answer this call...");
             window.setTimeout(function(){
                 // If the call is with video, assume the auto answer is also
@@ -2579,7 +2579,7 @@ function ReceiveCall(session) {
                 else {
                     AnswerAudioCall(lineObj.LineNumber);
                 }
-            }, answerTimeout);
+            }, answerTimeout + ( autoAnswerRequested ? 1000 : 0));
 
             // Select Buddy
             SelectLine(lineObj.LineNumber);
