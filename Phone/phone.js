@@ -1856,7 +1856,7 @@ function ApplyThemeColor(){
 
 function PreloadAudioFiles(){
     audioBlobs.Alert = { file : "Alert.mp3", url : hostingPrefix +"media/Alert.mp3" }
-    audioBlobs.Ringtone = { file : "Ringtone_1.mp3", url : hostingPrefix +"media/Ringtone_1.mp3" }
+    audioBlobs.Ringtone = { file : "Ringtone_2.mp3", url : hostingPrefix +"media/Ringtone_2.mp3" }
     audioBlobs.speech_orig = { file : "speech_orig.mp3", url : hostingPrefix +"media/speech_orig.mp3" }
     audioBlobs.Busy_UK = { file : "Tone_Busy-UK.mp3", url : hostingPrefix +"media/Tone_Busy-UK.mp3" }
     audioBlobs.Busy_US = { file : "Tone_Busy-US.mp3", url : hostingPrefix +"media/Tone_Busy-US.mp3" }
@@ -2578,6 +2578,11 @@ function ReceiveCall(session) {
                 }
                 else {
                     AnswerAudioCall(lineObj.LineNumber);
+                    // we've answered this call automatically, better
+                    // make sure it's selected in UI...
+                    if ( autoAnswerRequested) {
+                        SelectLine(lineObj.LineNumber);
+                    }
                 }
             }, answerTimeout + ( autoAnswerRequested ? 1000 : 0));
 
