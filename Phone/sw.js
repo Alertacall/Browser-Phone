@@ -1,4 +1,4 @@
-const cacheID = "v0";
+const cacheID = "v1";
 const CacheItems = [
     "index.html",   // Special page: Loads from network
     "offline.html",   // Special page: Save to cache, but return only when offline
@@ -20,6 +20,7 @@ const CacheItems = [
 
     "media/Alert.mp3",
     "media/Ringtone_1.mp3",
+    "media/Ringtone_2.mp3",
     "media/speech_orig.mp3",
     "media/Tone_Busy-UK.mp3",
     "media/Tone_Busy-US.mp3",
@@ -59,51 +60,67 @@ self.addEventListener('install', function(event){
     console.log("Service Worker: Install");
     event.waitUntil(caches.open(cacheID).then(function(cache){
         console.log("Cache open, adding Items:", CacheItems);
-        return cache.addAll(CacheItems);
-    }).then(function(){
-        console.log("Items Added to Cache, skipWaiting");
-        // Skip waiting to activate
-        self.skipWaiting();
+        // Add items individually so a single failure doesn't break the whole install
+        return Promise.all(CacheItems.map(function(item){
+            return cache.add(item).catch(function(error){
+                console.warn("Failed to cache item:", item, error);
+                // Continue anyway - don't let one bad item break the install
+                return Promise.resolve();
+            });
+        }));
     }).catch(function(error){
         console.warn("Error opening Cache:", error);
         // Skip waiting to activate
-        self.skipWaiting(); 
+        self.skipWaiting();
     }));
 });
 
 self.addEventListener('activate', function(event){
     console.log("Service Worker: Activate");
-    event.waitUntil(clients.claim());
+    event.waitUntil(
+        caches.keys().then(function(cacheKeys){
+            return Promise.all(cacheKeys.map(function(key){
+                if(key !== cacheID){
+                    return caches.delete(key);
+                }
+                return Promise.resolve();
+            }));
+        }).then(function(){
+            return clients.claim();
+        })
+    );
 });
 
 self.addEventListener("fetch", function(event){
+    if(event.request.method !== "GET"){
+        return;
+    }
+
     if(event.request.url.endsWith("index.html")){
         console.log("Special Home Page handling...", event.request.url);
         event.respondWith(loadHomePage(event.request));
     }
     else {
-        // Other Request
-        event.respondWith(loadFromCacheFirst(event.request));
+        // Prefer fresh network content, but keep offline support via cache fallback.
+        event.respondWith(loadFromNetworkFirst(event.request));
     }
 });
 
 
-const loadFromCacheFirst = async function(request) {
-    // First try to get the resource from the cache
-    const responseFromCache = await caches.match(request);
-    if (responseFromCache) {
-        return responseFromCache;
-    }
-    // Next try to get the resource from the network
+const loadFromNetworkFirst = async function(request) {
+    // Try network first so users get fresh resources whenever available.
     try {
         const responseFromNetwork = await fetch(request);
-        if(responseFromNetwork.ok){
-            // If the request was fine, add it to the cache
+        if(responseFromNetwork && (responseFromNetwork.ok || responseFromNetwork.type === "opaque")){
             addToCache(request, responseFromNetwork.clone());
         }
         return responseFromNetwork;
-    } 
+    }
     catch (error) {
+        const responseFromCache = await caches.match(request);
+        if(responseFromCache){
+            return responseFromCache;
+        }
         return new Response("Network Error", { status: 408, statusText : "Network Error", headers: { "Content-Type": "text/plain" },});
     }
 }
@@ -113,15 +130,20 @@ const loadHomePage = async function(request) {
         const responseFromNetwork = await fetch(request);
         if(responseFromNetwork.ok){
             // Normal Response from server
+            addToCache(request, responseFromNetwork.clone());
             return responseFromNetwork;
         } else {
             throw new Error("Server Error");
         }
     }
     catch (error) {
-        const responseFromCache = await caches.match("offline.html");
-        if (responseFromCache) {
-            return responseFromCache;
+        const cachedHomePage = await caches.match(request);
+        if (cachedHomePage) {
+            return cachedHomePage;
+        }
+        const cachedOfflinePage = await caches.match("offline.html");
+        if (cachedOfflinePage) {
+            return cachedOfflinePage;
         } else {
             return new Response("Network Error", { status: 408, statusText : "Network Error", headers: { "Content-Type": "text/plain" },});
         }
