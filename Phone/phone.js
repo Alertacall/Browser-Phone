@@ -2518,7 +2518,7 @@ function ReceiveCall(session) {
 
     // Auto Answer options
     var autoAnswerRequested = false;
-    var answerTimeout = 1000;
+    var answerTimeout = 250;
     if (!AutoAnswerEnabled  && IntercomPolicy == "enabled"){ // Check headers only if policy is allow
 
         // https://github.com/InnovateAsterisk/Browser-Phone/issues/126
@@ -2566,8 +2566,9 @@ function ReceiveCall(session) {
 
     if(AutoAnswerEnabled || AutoAnswerPolicy == "enabled" || autoAnswerRequested){
         if(CurrentCalls == 0 || autoAnswerRequested ){ // There are no other calls, so you can answer
-            console.log("Going to Auto Answer this call...");
+            console.log(`Going to Auto Answer this call... answerTimeout is ${answerTimeout}, current calls: ${CurrentCalls}`);
             window.setTimeout(function(){
+                console.log("The auto answer has fired")
                 // If the call is with video, assume the auto answer is also
                 // In order for this to work nicely, the recipient maut be "ready" to accept video calls
                 // In order to ensure video call compatibility (i.e. the recipient must have their web cam in, and working)
@@ -2584,7 +2585,7 @@ function ReceiveCall(session) {
                         SelectLine(lineObj.LineNumber);
                     }
                 }
-            }, answerTimeout + ( autoAnswerRequested ? 1000 : 0));
+            }, answerTimeout + ( CurrentCalls > 0 ? 1500 : 0));
 
             // Select Buddy
             SelectLine(lineObj.LineNumber);
