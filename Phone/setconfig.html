@@ -67,7 +67,8 @@
             VideoOrientation: 'rotateY(180deg)',
             VideoSrcId: 'default',
             VoiceMailSubscribe: '0',
-            VoicemailDid: ''
+            VoicemailDid: '',
+            MaxDidLength: '20'
         };
         for (const [key, defaultValue] of Object.entries(defaults)) {
             if (!localDB.getItem(key)) {
