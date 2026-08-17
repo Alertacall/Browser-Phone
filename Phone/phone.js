@@ -2478,13 +2478,21 @@ function ReceiveCall(session) {
         }
     }
 
+    // Auto Answer options
+    let autoAnswerRequested = false;
+    let answerTimeout = 250;
+    if (!AutoAnswerEnabled  && IntercomPolicy == "enabled"){ // Check headers only if policy is allow
+        [autoAnswerRequested, answerTimeout] = checkHeadersForAutoAnswer(session.request.headers);
+    }
+
     // Possible Early Rejection options
     if(DoNotDisturbEnabled == true || DoNotDisturbPolicy == "enabled") {
         if(DoNotDisturbEnabled == true && buddyObj.EnableDuringDnd == true){
             // This buddy has been allowed
             console.log("Buddy is allowed to call while you are on DND")
-        }
-        else {
+        } else if ( autoAnswerRequested ) {
+            console.log("Call is auto-answer, so not rejecting it")
+        } else {
             console.log("Do Not Disturb Enabled, rejecting call.");
             lineObj.SipSession.data.earlyReject = true;
             RejectCall(lineObj.LineNumber, true);
@@ -2516,54 +2524,7 @@ function ReceiveCall(session) {
     // Update the buddy list now so that any early rejected calls don't flash on
     UpdateBuddyList();
 
-    // Auto Answer options
-    var autoAnswerRequested = false;
-    var answerTimeout = 250;
-    if (!AutoAnswerEnabled  && IntercomPolicy == "enabled"){ // Check headers only if policy is allow
-
-        // https://github.com/InnovateAsterisk/Browser-Phone/issues/126
-        // Alert-Info: info=alert-autoanswer
-        // Alert-Info: answer-after=0
-        // Call-info: answer-after=0; x=y
-        // Call-Info: Answer-After=0
-        // Alert-Info: ;info=alert-autoanswer
-        // Alert-Info: <sip:>;info=alert-autoanswer
-        // Alert-Info: <sip:domain>;info=alert-autoanswer
-
-        var ci = session.request.headers["Call-Info"];
-        if (ci !== undefined && ci.length > 0){
-            for (var i = 0; i < ci.length; i++){
-                var raw_ci = ci[i].raw.toLowerCase();
-                if (raw_ci.indexOf("answer-after=") > 0){
-                    var temp_seconds_autoanswer = parseInt(raw_ci.substring(raw_ci.indexOf("answer-after=") +"answer-after=".length).split(';')[0]);
-                    if (Number.isInteger(temp_seconds_autoanswer) && temp_seconds_autoanswer >= 0){
-                        autoAnswerRequested = true;
-                        if(temp_seconds_autoanswer > 1) answerTimeout = temp_seconds_autoanswer * 1000;
-                        break;
-                    }
-                }
-            }
-        }
-        var ai = session.request.headers["Alert-Info"];
-        if (autoAnswerRequested === false && ai !== undefined && ai.length > 0){
-            for (var i=0; i < ai.length ; i++){
-                var raw_ai = ai[i].raw.toLowerCase();
-                if (raw_ai.indexOf("auto answer") > 0 || raw_ai.indexOf("alert-autoanswer") > 0){
-                    var autoAnswerRequested = true;
-                    break;
-                }
-                if (raw_ai.indexOf("answer-after=") > 0){
-                    var temp_seconds_autoanswer = parseInt(raw_ai.substring(raw_ai.indexOf("answer-after=") +"answer-after=".length).split(';')[0]);
-                    if (Number.isInteger(temp_seconds_autoanswer) && temp_seconds_autoanswer >= 0){
-                        autoAnswerRequested = true;
-                        if(temp_seconds_autoanswer > 1) answerTimeout = temp_seconds_autoanswer * 1000;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
+    // apply auto answer
     if(AutoAnswerEnabled || AutoAnswerPolicy == "enabled" || autoAnswerRequested){
         if(CurrentCalls == 0 || autoAnswerRequested ){ // There are no other calls, so you can answer
             console.log(`Going to Auto Answer this call... answerTimeout is ${answerTimeout}, current calls: ${CurrentCalls}`);
@@ -2694,6 +2655,52 @@ function ReceiveCall(session) {
     // Custom Web hook
     if(typeof web_hook_on_invite !== 'undefined') web_hook_on_invite(session);
 }
+function checkHeadersForAutoAnswer(headers) {
+    // https://github.com/InnovateAsterisk/Browser-Phone/issues/126
+    // Alert-Info: info=alert-autoanswer
+    // Alert-Info: answer-after=0
+    // Call-info: answer-after=0; x=y
+    // Call-Info: Answer-After=0
+    // Alert-Info: ;info=alert-autoanswer
+    // Alert-Info: <sip:>;info=alert-autoanswer
+    // Alert-Info: <sip:domain>;info=alert-autoanswer
+    let autoAnswerRequested = false, answerTimeout = 250;
+
+    var ci = headers["Call-Info"];
+    if (ci !== undefined && ci.length > 0) {
+        for (var i = 0; i < ci.length; i++) {
+            var raw_ci = ci[i].raw.toLowerCase();
+            if (raw_ci.indexOf("answer-after=") > 0) {
+                var temp_seconds_autoanswer = parseInt(raw_ci.substring(raw_ci.indexOf("answer-after=") + "answer-after=".length).split(';')[0]);
+                if (Number.isInteger(temp_seconds_autoanswer) && temp_seconds_autoanswer >= 0) {
+                    autoAnswerRequested = true;
+                    if (temp_seconds_autoanswer > 1) answerTimeout = temp_seconds_autoanswer * 1000;
+                    break;
+                }
+            }
+        }
+    }
+    var ai = headers["Alert-Info"];
+    if (autoAnswerRequested === false && ai !== undefined && ai.length > 0) {
+        for (var i = 0; i < ai.length; i++) {
+            var raw_ai = ai[i].raw.toLowerCase();
+            if (raw_ai.indexOf("auto answer") > 0 || raw_ai.indexOf("alert-autoanswer") > 0) {
+                autoAnswerRequested = true;
+                break;
+            }
+            if (raw_ai.indexOf("answer-after=") > 0) {
+                var temp_seconds_autoanswer = parseInt(raw_ai.substring(raw_ai.indexOf("answer-after=") + "answer-after=".length).split(';')[0]);
+                if (Number.isInteger(temp_seconds_autoanswer) && temp_seconds_autoanswer >= 0) {
+                    autoAnswerRequested = true;
+                    if (temp_seconds_autoanswer > 1) answerTimeout = temp_seconds_autoanswer * 1000;
+                    break;
+                }
+            }
+        }
+    }
+    return [autoAnswerRequested, answerTimeout];
+}
+
 function AnswerAudioCall(lineNumber) {
     // CloseWindow();
 
