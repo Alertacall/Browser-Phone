@@ -2481,7 +2481,7 @@ function ReceiveCall(session) {
     // Auto Answer options
     let autoAnswerRequested = false;
     let answerTimeout = 250;
-    if (!AutoAnswerEnabled  && IntercomPolicy == "enabled"){ // Check headers only if policy is allow
+    if (!AutoAnswerEnabled && IntercomPolicy == "enabled"){ // Check headers only when IntercomPolicy is enabled
         [autoAnswerRequested, answerTimeout] = checkHeadersForAutoAnswer(session.request.headers);
     }
 
